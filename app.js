@@ -131,6 +131,67 @@ floors.forEach((floor) => floor.rooms.forEach((room) => {
   room.photoAssociation = ["upperRooms", "office"].includes(setName) ? "Associação provisória" : "Foto real do ambiente";
 }));
 
+const PROGRAM_TEMPLATES = {
+  pq: { type: "Sala de pesquisadores", status: "Base definida", capacity: "3 postos", furniture: ["3 mesas de trabalho", "3 cadeiras ergonômicas", "Estantes e apoio para documentos", "Decoração e plantas"] },
+  adm: { type: "Sala administrativa", status: "Base definida", capacity: "2 postos", furniture: ["2 mesas de trabalho", "2 cadeiras ergonômicas", "Estantes e arquivo", "Decoração e plantas"] },
+  coordinator: { type: "Escritório de coordenação", status: "Base definida", capacity: "1 coordenador + 3 visitantes", furniture: ["1 mesa executiva", "1 cadeira presidencial com apoio lombar", "3 cadeiras de atendimento", "Estantes e espaços de apoio", "Decoração e plantas"] },
+  meeting: { type: "Sala de reunião", status: "Base definida", capacity: "7–8 pessoas", furniture: ["1 mesa de reunião para 8", "8 cadeiras", "TV 65 polegadas", "Câmera Logitech para reuniões", "Microfone de sala"] },
+  cowork: { type: "Coworking", status: "Base definida", capacity: "6 postos", furniture: ["Bancada modular 3 + 3", "6 cadeiras ergonômicas", "6 suportes para monitor", "1 quadro para notas e discussões", "6 guarda-volumes para bolsas"] },
+  decompression: { type: "Descompressão", status: "Estimativa inicial", capacity: "Até 6 pessoas", furniture: ["6 pufes", "1 tapete grande", "TV de 55–65 polegadas", "1 móvel baixo para TV", "2 mesas laterais", "Estante baixa, decoração e plantas"] },
+  lab: { type: "Laboratório", status: "Estimativa de mobiliário", capacity: "4 postos técnicos", furniture: ["4 cadeiras ou bancos laboratoriais reguláveis", "1 carrinho técnico móvel", "2 armários técnicos", "Bancadas e gabinetes a quantificar em metros lineares"] },
+  auditorium: { type: "Auditório", status: "Base definida", capacity: "40 pessoas", furniture: ["40 cadeiras", "1 púlpito ou apoio para palestrante", "2 mesas de apoio", "1 móvel técnico para audiovisual", "Posições acessíveis a validar no layout"] },
+  storage: { type: "Almoxarifado", status: "Estimativa inicial", capacity: "2 postos de apoio", furniture: ["10 módulos de estantes", "2 armários fechados com chave", "1 mesa de conferência", "2 cadeiras", "2 carrinhos de transporte"] },
+  cafe: { type: "Café e convivência", status: "Estimativa inicial", capacity: "8 lugares", furniture: ["1 mesa para quatro pessoas", "4 cadeiras", "1 balcão alto", "4 banquetas", "Aparador, armários e lixeira seletiva"] },
+  reception: { type: "Hall de recepção", status: "Estimativa inicial", capacity: "10 visitantes + 2 atendentes", furniture: ["1 balcão de recepção", "2 cadeiras ergonômicas", "2 sofás de dois lugares", "6 poltronas", "1 mesa de centro e 2 laterais", "Aparador, comunicação institucional e plantas"] },
+  lobby: { type: "Lobby e circulação vertical", status: "Estimativa inicial", capacity: "3 lugares", furniture: ["1 banco para três pessoas", "1 console ou painel informativo", "1 vaso de destaque"] },
+  upperHall: { type: "Hall colaborativo", status: "Estimativa inicial", capacity: "14 lugares", furniture: ["2 sofás de dois lugares", "6 poltronas", "3 mesas baixas", "1 mesa alta colaborativa", "4 banquetas", "Painéis de comunicação e plantas"] },
+  corridor: { type: "Circulação", status: "Sem mobiliário previsto", capacity: "Circulação livre", furniture: ["Manter rotas e portas desobstruídas", "Somente sinalização e comunicação de parede"] },
+  entrance: { type: "Acesso externo", status: "Conceito em desenvolvimento", capacity: "Acesso principal", furniture: ["Sinalização institucional", "Paisagismo e iluminação de apoio", "Banco externo somente após validação da circulação"] },
+};
+
+function roomProgram(room) {
+  if (room.id.startsWith("sala-pq")) return PROGRAM_TEMPLATES.pq;
+  if (room.id.startsWith("sala-adm")) return PROGRAM_TEMPLATES.adm;
+  if (["escritorio-bruna", "escritorio-renata"].includes(room.id)) return PROGRAM_TEMPLATES.coordinator;
+  if (room.id.startsWith("reuniao")) return PROGRAM_TEMPLATES.meeting;
+  if (room.id.startsWith("cowork")) return PROGRAM_TEMPLATES.cowork;
+  if (room.id === "descompressao") return PROGRAM_TEMPLATES.decompression;
+  if (room.id.startsWith("lab-")) return {
+    ...PROGRAM_TEMPLATES.lab,
+    technicalContext: room.id === "lab-reatores"
+      ? "Biodigestores, reatores e infraestrutura de gases para biogás e biometano."
+      : "Química analítica: GC-MS Shimadzu, HPLC, TOC e sistemas de análise de gases.",
+  };
+  if (room.id === "auditorio") return PROGRAM_TEMPLATES.auditorium;
+  if (room.id === "almoxarifado") return PROGRAM_TEMPLATES.storage;
+  if (room.id === "cafe") return PROGRAM_TEMPLATES.cafe;
+  if (room.id === "hall-terreo") return PROGRAM_TEMPLATES.reception;
+  if (room.id === "lobby-elevador") return PROGRAM_TEMPLATES.lobby;
+  if (room.id === "hall-superior") return PROGRAM_TEMPLATES.upperHall;
+  if (room.id.startsWith("corredor")) return PROGRAM_TEMPLATES.corridor;
+  return PROGRAM_TEMPLATES.entrance;
+}
+
+floors.forEach((floor) => floor.rooms.forEach((room) => { room.program = roomProgram(room); }));
+
+const PROJECT_TOTALS = [
+  ["29", "espaços mapeados"], ["25", "ambientes mobiliáveis"], ["13", "tipologias"],
+  ["7", "laboratórios"], ["92", "assentos confirmados"], ["28", "assentos laboratoriais estimados"],
+];
+
+const FURNITURE_TOTALS = [
+  ["Mesas individuais", "12", "PQ, Administração e Coordenação"],
+  ["Estações de coworking", "18", "3 conjuntos modulares de 6 postos"],
+  ["Mesas de reunião", "2", "8 lugares cada"],
+  ["Assentos confirmados", "92", "Inclui 40 lugares do auditório"],
+  ["Estantes", "4 conjuntos", "Administração e Coordenação"],
+  ["Guarda-volumes", "18", "Um para cada posto de coworking"],
+  ["Suportes de monitor", "18", "Coworking"],
+  ["Quadros de discussão", "3", "Um por coworking"],
+  ["TVs", "3", "2 de reunião + 1 de descompressão"],
+  ["Kits de videoconferência", "2", "Câmera Logitech + microfone"],
+];
+
 const state = {
   floorIndex: 0,
   room: null,
@@ -151,6 +212,7 @@ const roomList = $("#roomList");
 const floorPlan = $("#floorPlan");
 const hotspotLayer = $("#hotspotLayer");
 const galleryDialog = $("#galleryDialog");
+const programDialog = $("#programDialog");
 const viewerImage = $("#viewerImage");
 const imagePan = $("#imagePan");
 const photoPreview = $("#photoPreview");
@@ -275,6 +337,12 @@ function renderGallery() {
   $("#conceptPosition").textContent = `Opção ${state.conceptIndex + 1} de ${room.concepts.length}`;
   $("#conceptTitle").textContent = selected.title;
   $("#conceptDescription").textContent = selected.description;
+  $("#roomProgram").innerHTML = `
+    <div class="room-program-heading"><span>Ficha do ambiente</span><strong>${room.program.status}</strong></div>
+    <div class="room-program-meta"><span>${room.program.type}</span><span>${room.program.capacity}</span></div>
+    ${room.program.technicalContext ? `<p>${room.program.technicalContext}</p>` : ""}
+    <ul>${room.program.furniture.map((item) => `<li>${item}</li>`).join("")}</ul>
+  `;
   $("#conceptVotes").textContent = voteCount(room.id, selected.id);
   viewerImage.src = selected.image;
   viewerImage.alt = `${room.name} — ${selected.title}`;
@@ -289,6 +357,38 @@ function renderGallery() {
   $("#nextConcept").hidden = !multiple;
   applyImageTransform();
 }
+
+function renderProgram() {
+  $("#programTotals").innerHTML = PROJECT_TOTALS.map(([value, label]) => `
+    <article class="program-total"><strong>${value}</strong><span>${label}</span></article>
+  `).join("");
+  $("#furnitureTotals").innerHTML = FURNITURE_TOTALS.map(([item, total, note]) => `
+    <tr><th scope="row">${item}</th><td>${total}</td><td>${note}</td></tr>
+  `).join("");
+  $("#programFloors").innerHTML = floors.map((floor) => `
+    <section class="program-floor">
+      <header><div><span>${floor.shortName}</span><h3>${floor.title}</h3></div><strong>${floor.rooms.length} ambientes</strong></header>
+      <div class="program-room-grid">
+        ${floor.rooms.map((room) => `
+          <article class="program-room-card">
+            <div class="program-room-title"><div><h4>${room.name}</h4><span>${room.area}</span></div><span class="program-status">${room.program.status}</span></div>
+            <div class="program-room-meta"><span>${room.program.type}</span><strong>${room.program.capacity}</strong></div>
+            ${room.program.technicalContext ? `<p>${room.program.technicalContext}</p>` : ""}
+            <ul>${room.program.furniture.map((item) => `<li>${item}</li>`).join("")}</ul>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `).join("");
+}
+
+function openProgram() {
+  hidePhotoPreview();
+  renderProgram();
+  if (!programDialog.open) programDialog.showModal();
+}
+
+function closeProgram() { programDialog.close(); }
 
 function changeConcept(delta) {
   if (!state.room) return;
@@ -470,6 +570,9 @@ document.addEventListener("click", (event) => {
 
 $("#closeGallery").addEventListener("click", closeGallery);
 galleryDialog.addEventListener("click", (event) => { if (event.target === galleryDialog) closeGallery(); });
+$("#programButton").addEventListener("click", openProgram);
+$("#closeProgram").addEventListener("click", closeProgram);
+programDialog.addEventListener("click", (event) => { if (event.target === programDialog) closeProgram(); });
 $("#previousConcept").addEventListener("click", () => changeConcept(-1));
 $("#nextConcept").addEventListener("click", () => changeConcept(1));
 $("#voteButton").addEventListener("click", registerVote);

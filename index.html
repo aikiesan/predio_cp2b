@@ -51,6 +51,7 @@
           </div>
           <div class="header-actions">
             <span id="syncStatus" class="sync-status" role="status">Atualizando votos…</span>
+            <button type="button" id="programButton" class="program-button">Programa e mobiliário</button>
             <div class="zoom-controls" aria-label="Zoom da planta">
               <button type="button" id="planZoomOut" aria-label="Diminuir planta">−</button>
               <span id="planZoomLabel">100%</span>
@@ -109,6 +110,7 @@
               <div class="vote-total"><strong id="conceptVotes">0</strong><span>votos</span></div>
             </div>
             <p id="conceptDescription" class="concept-description"></p>
+            <section id="roomProgram" class="room-program" aria-label="Ficha e mobiliário do ambiente"></section>
 
             <div id="thumbnailList" class="thumbnail-list" aria-label="Opções do ambiente"></div>
 
@@ -119,6 +121,44 @@
               </button>
               <p>O GitHub abrirá com o voto preenchido. Confirme em “Submit new issue” para registrar.</p>
             </div>
+          </aside>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="programDialog" class="program-dialog">
+      <div class="program-shell">
+        <header class="program-header">
+          <div>
+            <p class="eyebrow">Programa arquitetônico</p>
+            <h2>Ambientes e mobiliário</h2>
+            <p>Quantitativos-base para orientar os modelos 3D e o detalhamento executivo 2D.</p>
+          </div>
+          <button type="button" id="closeProgram" class="icon-button" aria-label="Fechar programa">×</button>
+        </header>
+        <div class="program-scroll">
+          <section>
+            <div id="programTotals" class="program-totals"></div>
+          </section>
+
+          <section class="furniture-summary">
+            <div class="program-section-heading">
+              <div><span>Quantitativos consolidados</span><h3>Mobiliário-base confirmado</h3></div>
+              <p>Estimativas de halls, laboratórios e apoio permanecem identificadas nas fichas.</p>
+            </div>
+            <div class="program-table-wrap">
+              <table>
+                <thead><tr><th>Item</th><th>Total</th><th>Aplicação</th></tr></thead>
+                <tbody id="furnitureTotals"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div id="programFloors"></div>
+
+          <aside class="program-note">
+            <strong>Critério para o executivo</strong>
+            <p>Bancadas, gabinetes e armários laboratoriais serão quantificados em metros lineares depois do posicionamento dos equipamentos. Plantas naturais ficam restritas a escritórios, halls, café e descompressão.</p>
           </aside>
         </div>
       </div>
