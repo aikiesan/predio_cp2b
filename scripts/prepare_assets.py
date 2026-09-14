@@ -10,8 +10,10 @@ OUTPUT = SOURCE / "output" / "imagegen"
 
 PLAN_DIR = REPO / "assets" / "plans"
 CONCEPT_DIR = REPO / "assets" / "concepts"
+PHOTO_DIR = REPO / "assets" / "photos"
 PLAN_DIR.mkdir(parents=True, exist_ok=True)
 CONCEPT_DIR.mkdir(parents=True, exist_ok=True)
+PHOTO_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def export_webp(source: Path, target_name: str, max_size=(1800, 1200)) -> None:
@@ -21,6 +23,16 @@ def export_webp(source: Path, target_name: str, max_size=(1800, 1200)) -> None:
         image = image.convert("RGB")
         image.thumbnail(max_size, Image.Resampling.LANCZOS)
         image.save(CONCEPT_DIR / target_name, "WEBP", quality=86, method=6)
+
+
+def export_photo(source: Path, target_name: str, max_size=(1200, 900)) -> None:
+    if not source.exists():
+        raise FileNotFoundError(source)
+    with Image.open(source) as image:
+        from PIL import ImageOps
+        image = ImageOps.exif_transpose(image).convert("RGB")
+        image.thumbnail(max_size, Image.Resampling.LANCZOS)
+        image.save(PHOTO_DIR / target_name, "WEBP", quality=80, method=6)
 
 
 plans = {
@@ -83,4 +95,39 @@ add_folder("entrada", cafe_root / "Entrada_Principal_IMG_8741_4_Opcoes")
 for name, source in assets.items():
     export_webp(source, name)
 
-print(f"Prepared {len(plans)} plans and {len(assets)} concept images")
+ORIGINAL_PHOTOS = SOURCE / "02_Fotos_do_Predio"
+LUCAS_PHOTOS = SOURCE / "Fotos_do_Predio_Lucas_Nakamura"
+
+photos = {
+    "entrada-img8741.webp": ORIGINAL_PHOTOS / "IMG_8741.JPG",
+    "hall-img8733.webp": ORIGINAL_PHOTOS / "IMG_8733.JPG",
+    "lobby-img8734.webp": ORIGINAL_PHOTOS / "IMG_8734.JPG",
+    "cafe-img8708.webp": ORIGINAL_PHOTOS / "IMG_8708.JPG",
+    "auditorio-img8715.webp": ORIGINAL_PHOTOS / "IMG_8715.JPG",
+    "escritorio-img8718.webp": ORIGINAL_PHOTOS / "IMG_8718.JPG",
+    "escritorio-img8719.webp": ORIGINAL_PHOTOS / "IMG_8719.JPG",
+    "corredor-img8725.webp": ORIGINAL_PHOTOS / "IMG_8725.JPG",
+    "corredor-img8727.webp": ORIGINAL_PHOTOS / "IMG_8727.JPG",
+    "lab-img8703.webp": ORIGINAL_PHOTOS / "IMG_8703.JPG",
+    "lab-img8705.webp": ORIGINAL_PHOTOS / "IMG_8705.JPG",
+    "hall-escada-20250806.webp": LUCAS_PHOTOS / "20250806_151100.jpg",
+    "corredor-20250806.webp": LUCAS_PHOTOS / "20250806_151120.jpg",
+    "sala-vazia-01.webp": LUCAS_PHOTOS / "20250806_152019.jpg",
+    "sala-vazia-02.webp": LUCAS_PHOTOS / "20250806_154529.jpg",
+    "lab-visita-01.webp": LUCAS_PHOTOS / "20260430_133353.jpg",
+    "lab-visita-02.webp": LUCAS_PHOTOS / "20260430_133356.jpg",
+    "fachada-01.webp": LUCAS_PHOTOS / "20260521_123513.jpg",
+    "fachada-02.webp": LUCAS_PHOTOS / "20260521_123516.jpg",
+    "placa-cp2b.webp": LUCAS_PHOTOS / "20260806_100755.jpg",
+    "recepcao-visita-01.webp": LUCAS_PHOTOS / "20260902_101413.jpg",
+    "recepcao-visita-02.webp": LUCAS_PHOTOS / "20260902_101419.jpg",
+    "lab-operacao-01.webp": LUCAS_PHOTOS / "20260902_102558.jpg",
+    "lab-operacao-02.webp": LUCAS_PHOTOS / "20260902_102623.jpg",
+    "reator-operacao-01.webp": LUCAS_PHOTOS / "20260902_103839.jpg",
+    "reator-operacao-02.webp": LUCAS_PHOTOS / "20260902_103857.jpg",
+}
+
+for name, source in photos.items():
+    export_photo(source, name)
+
+print(f"Prepared {len(plans)} plans, {len(assets)} concepts and {len(photos)} real photos")

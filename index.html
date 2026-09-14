@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#071c22" />
+    <meta name="theme-color" content="#f5efe5" />
     <meta
       name="description"
       content="Plantas interativas do edifício CP2B para visualização e votação dos conceitos de ambientes."
@@ -11,7 +11,7 @@
     <link
       rel="icon"
       type="image/svg+xml"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23071c22'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%233de0c5' stroke-width='5'/%3E%3Cpath d='M20 36h24M25 27h14' stroke='%23f3c969' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23f5efe5'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%237d9a83' stroke-width='5'/%3E%3Cpath d='M20 36h24M25 27h14' stroke='%23c28d6b' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
     />
     <title>CP2B — Conceitos dos ambientes</title>
     <link rel="stylesheet" href="styles.css" />
@@ -39,7 +39,7 @@
 
         <div class="sidebar-footer">
           <span class="legend-dot"></span>
-          Clique nos pontos da planta para comparar e votar.
+          Passe o cursor para ver a foto real. Clique para comparar e votar.
         </div>
       </aside>
 
@@ -123,6 +123,18 @@
         </div>
       </div>
     </dialog>
+
+    <aside id="photoPreview" class="photo-preview" role="tooltip" aria-hidden="true">
+      <div class="photo-preview-media">
+        <img id="photoPreviewImage" alt="" />
+        <span id="photoPreviewCounter"></span>
+      </div>
+      <div class="photo-preview-copy">
+        <span class="photo-preview-kicker">Foto atual do prédio</span>
+        <strong id="photoPreviewTitle"></strong>
+        <span id="photoPreviewMeta"></span>
+      </div>
+    </aside>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="app.js" defer></script>

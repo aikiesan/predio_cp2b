@@ -1,5 +1,21 @@
 const GITHUB_REPO = "aikiesan/predio_cp2b";
 const asset = (name) => `assets/concepts/${name}`;
+const realPhoto = (name) => `assets/photos/${name}`;
+
+const PHOTOSETS = {
+  entrance: ["entrada-img8741.webp", "fachada-01.webp", "fachada-02.webp", "placa-cp2b.webp"],
+  hall: ["hall-img8733.webp", "recepcao-visita-01.webp", "recepcao-visita-02.webp"],
+  lobby: ["lobby-img8734.webp", "hall-escada-20250806.webp"],
+  cafe: ["cafe-img8708.webp"],
+  corridor: ["corredor-img8725.webp", "corredor-img8727.webp", "corredor-20250806.webp"],
+  lab01: ["lab-visita-01.webp", "lab-visita-02.webp"],
+  lab02: ["lab-img8703.webp"],
+  labTechnical: ["lab-img8705.webp"],
+  reactors: ["lab-operacao-01.webp", "lab-operacao-02.webp", "reator-operacao-01.webp", "reator-operacao-02.webp"],
+  auditorium: ["auditorio-img8715.webp"],
+  office: ["escritorio-img8718.webp", "escritorio-img8719.webp"],
+  upperRooms: ["sala-vazia-01.webp", "sala-vazia-02.webp"],
+};
 
 const concept = (id, title, image, description = "Compare materiais, mobiliário, iluminação e organização espacial desta alternativa.") => ({
   id, title, image: asset(image), description,
@@ -97,6 +113,24 @@ const floors = [
   },
 ];
 
+const ROOM_PHOTOSETS = {
+  "entrada-principal": "entrance", "hall-terreo": "hall", cafe: "cafe", "lobby-elevador": "lobby",
+  "lab-analitica-01": "lab01", "lab-estufa-mufla": "labTechnical", "lab-fq-01": "lab01",
+  "lab-reatores": "reactors", "corredor-terreo": "corridor",
+  "lab-analitica-02": "lab02", "lab-analitica-tecnico": "labTechnical", "lab-fq-02": "lab02",
+  almoxarifado: "lab02", auditorio: "auditorium", "corredor-primeiro": "corridor",
+  "sala-adm-01": "office", "sala-adm-02": "upperRooms", "sala-pq-01": "office", "sala-pq-02": "upperRooms",
+  "cowork-01": "upperRooms", descompressao: "upperRooms", "reuniao-01": "upperRooms", "reuniao-02": "upperRooms",
+  "escritorio-bruna": "office", "escritorio-renata": "office", "cowork-02": "upperRooms", "cowork-03": "upperRooms",
+  "hall-superior": "lobby", "corredor-segundo": "corridor",
+};
+
+floors.forEach((floor) => floor.rooms.forEach((room) => {
+  const setName = ROOM_PHOTOSETS[room.id];
+  room.photos = (PHOTOSETS[setName] || PHOTOSETS.upperRooms).map(realPhoto);
+  room.photoAssociation = ["upperRooms", "office"].includes(setName) ? "Associação provisória" : "Foto real do ambiente";
+}));
+
 const state = {
   floorIndex: 0,
   room: null,
@@ -119,6 +153,11 @@ const hotspotLayer = $("#hotspotLayer");
 const galleryDialog = $("#galleryDialog");
 const viewerImage = $("#viewerImage");
 const imagePan = $("#imagePan");
+const photoPreview = $("#photoPreview");
+const photoPreviewImage = $("#photoPreviewImage");
+let photoPreviewTimer;
+let photoPreviewIndex = 0;
+let previewRoom = null;
 
 function cameraIcon() {
   return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8.5h3l1.7-2.5h7.6l1.7 2.5h3v10h-17z"/><circle cx="12" cy="13.5" r="3.5"/></svg>`;
@@ -145,14 +184,14 @@ function renderFloor() {
   floorPlan.alt = `Planta baixa — ${floor.shortName}: ${floor.title}`;
 
   roomList.innerHTML = floor.rooms.map((room) => `
-    <button type="button" class="room-item" data-room="${room.id}">
+    <button type="button" class="room-item" data-room="${room.id}" data-preview-room="${room.id}">
       <span><span class="room-name">${room.name}</span><span class="room-area">${room.area}</span></span>
       <span class="room-options">${room.concepts.length} ${room.concepts.length === 1 ? "opção" : "opções"}</span>
     </button>
   `).join("");
 
   hotspotLayer.innerHTML = floor.rooms.map((room) => `
-    <button type="button" class="hotspot" data-room="${room.id}" style="left:${room.x}%;top:${room.y}%" aria-label="Abrir conceitos de ${room.name}, ${room.area}">
+    <button type="button" class="hotspot" data-room="${room.id}" data-preview-room="${room.id}" style="left:${room.x}%;top:${room.y}%" aria-label="Abrir conceitos de ${room.name}, ${room.area}">
       ${cameraIcon()}
       <span class="hotspot-label"><strong>${room.name}</strong><span>${room.area} · ${room.concepts.length} ${room.concepts.length === 1 ? "opção" : "opções"}</span></span>
     </button>
@@ -162,6 +201,53 @@ function renderFloor() {
 
 function findRoom(roomId) {
   return floors[state.floorIndex].rooms.find((room) => room.id === roomId);
+}
+
+function positionPhotoPreview(anchor) {
+  const anchorRect = anchor.getBoundingClientRect();
+  const previewRect = photoPreview.getBoundingClientRect();
+  const gap = 16;
+  let left = anchorRect.right + gap;
+  if (left + previewRect.width > window.innerWidth - gap) left = anchorRect.left - previewRect.width - gap;
+  left = Math.max(gap, Math.min(left, window.innerWidth - previewRect.width - gap));
+  let top = anchorRect.top + anchorRect.height / 2 - previewRect.height / 2;
+  top = Math.max(gap, Math.min(top, window.innerHeight - previewRect.height - gap));
+  photoPreview.style.left = `${left}px`;
+  photoPreview.style.top = `${top}px`;
+}
+
+function renderPhotoPreviewFrame() {
+  if (!previewRoom) return;
+  const total = previewRoom.photos.length;
+  photoPreviewImage.src = previewRoom.photos[photoPreviewIndex % total];
+  photoPreviewImage.alt = `Foto real — ${previewRoom.name}`;
+  $("#photoPreviewCounter").textContent = total > 1 ? `${(photoPreviewIndex % total) + 1}/${total}` : "";
+}
+
+function showPhotoPreview(anchor, room) {
+  if (!room?.photos?.length || window.matchMedia("(hover: none)").matches) return;
+  clearInterval(photoPreviewTimer);
+  previewRoom = room;
+  photoPreviewIndex = 0;
+  $("#photoPreviewTitle").textContent = room.name;
+  $("#photoPreviewMeta").textContent = `${room.area} · ${room.photoAssociation}`;
+  renderPhotoPreviewFrame();
+  photoPreview.setAttribute("aria-hidden", "false");
+  photoPreview.classList.add("show");
+  requestAnimationFrame(() => positionPhotoPreview(anchor));
+  if (room.photos.length > 1) {
+    photoPreviewTimer = setInterval(() => {
+      photoPreviewIndex += 1;
+      renderPhotoPreviewFrame();
+    }, 2100);
+  }
+}
+
+function hidePhotoPreview() {
+  clearInterval(photoPreviewTimer);
+  photoPreview.classList.remove("show");
+  photoPreview.setAttribute("aria-hidden", "true");
+  previewRoom = null;
 }
 
 function openGallery(room, conceptIndex = 0) {
@@ -346,6 +432,31 @@ floorNav.addEventListener("click", (event) => {
   renderFloor();
   updateHash();
 });
+
+document.addEventListener("pointerover", (event) => {
+  const anchor = event.target.closest("[data-preview-room]");
+  if (!anchor || anchor.contains(event.relatedTarget)) return;
+  const room = findRoom(anchor.dataset.previewRoom);
+  if (room) showPhotoPreview(anchor, room);
+});
+
+document.addEventListener("pointerout", (event) => {
+  const anchor = event.target.closest("[data-preview-room]");
+  if (!anchor || anchor.contains(event.relatedTarget)) return;
+  hidePhotoPreview();
+});
+
+document.addEventListener("focusin", (event) => {
+  const anchor = event.target.closest("[data-preview-room]");
+  if (anchor) showPhotoPreview(anchor, findRoom(anchor.dataset.previewRoom));
+});
+
+document.addEventListener("focusout", (event) => {
+  if (event.target.closest("[data-preview-room]")) hidePhotoPreview();
+});
+
+window.addEventListener("resize", hidePhotoPreview);
+window.addEventListener("scroll", hidePhotoPreview, true);
 
 document.addEventListener("click", (event) => {
   const roomButton = event.target.closest("[data-room]");
