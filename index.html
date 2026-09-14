@@ -13,7 +13,7 @@
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23f5efe5'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%237d9a83' stroke-width='5'/%3E%3Cpath d='M20 36h24M25 27h14' stroke='%23c28d6b' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
     />
-    <title>CP2B — Conceitos dos ambientes</title>
+    <title>CP2b Hub</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -50,7 +50,9 @@
             <h2 id="floorTitle"></h2>
           </div>
           <div class="header-actions">
+            <div id="voterBar" class="voter-bar" hidden></div>
             <span id="syncStatus" class="sync-status" role="status">Atualizando votos…</span>
+            <button type="button" id="hubButton" class="hub-button">Painel do Hub</button>
             <button type="button" id="programButton" class="program-button">Programa e mobiliário</button>
             <div class="zoom-controls" aria-label="Zoom da planta">
               <button type="button" id="planZoomOut" aria-label="Diminuir planta">−</button>
@@ -115,11 +117,14 @@
             <div id="thumbnailList" class="thumbnail-list" aria-label="Opções do ambiente"></div>
 
             <div class="vote-box">
+              <div id="decisionBox" class="decision-box"></div>
               <button type="button" id="voteButton" class="vote-button">
                 <span aria-hidden="true">✓</span>
-                Votar neste conceito
+                <span class="vote-label">Votar neste conceito</span>
               </button>
-              <p>O GitHub abrirá com o voto preenchido. Confirme em “Submit new issue” para registrar.</p>
+              <button type="button" id="freezeButton" class="freeze-button" hidden>Congelar como decisão</button>
+              <p class="vote-hint db-hint">O voto é registrado na hora, sem login. Você pode mudar de opção quando quiser.</p>
+              <p class="vote-hint gh-hint">O GitHub abrirá com o voto preenchido. Confirme em “Submit new issue” para registrar.</p>
             </div>
           </aside>
         </div>
@@ -159,6 +164,84 @@
           <aside class="program-note">
             <strong>Critério para o executivo</strong>
             <p>Bancadas, gabinetes e armários laboratoriais serão quantificados em metros lineares depois do posicionamento dos equipamentos. Plantas naturais ficam restritas a escritórios, halls, café e descompressão.</p>
+          </aside>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="hubDialog" class="program-dialog hub-dialog">
+      <div class="program-shell">
+        <header class="program-header">
+          <div>
+            <p class="eyebrow">Painel do projeto</p>
+            <h2>CP2b Hub</h2>
+            <p id="hubSummary">Situação das decisões, áreas e infraestrutura do edifício.</p>
+          </div>
+          <button type="button" id="closeHub" class="icon-button" aria-label="Fechar painel">×</button>
+        </header>
+        <div class="program-scroll">
+          <section>
+            <div id="hubTotals" class="program-totals"></div>
+          </section>
+
+          <section class="hub-section">
+            <div class="program-section-heading">
+              <div><span>Quadro de áreas</span><h3>Áreas por pavimento</h3></div>
+              <p>Somatório dos ambientes com área declarada na planilha do projeto.</p>
+            </div>
+            <div class="program-table-wrap">
+              <table>
+                <thead><tr><th>Pavimento</th><th>Ambientes</th><th>Com área</th><th>Área somada</th></tr></thead>
+                <tbody id="hubFloorAreas"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="hub-section">
+            <div class="program-section-heading">
+              <div><span>Votação</span><h3>Ambientes com mais de uma opção</h3></div>
+              <p>Estes são os ambientes em que existe escolha real a fazer.</p>
+            </div>
+            <div class="program-table-wrap">
+              <table>
+                <thead><tr><th>Ambiente</th><th>Opções</th><th>Votos</th><th>Liderando</th><th>Situação</th></tr></thead>
+                <tbody id="hubDecisions"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="hub-section">
+            <div class="program-section-heading">
+              <div><span>Cobertura</span><h3>Ambientes com conceito único</h3></div>
+              <p>Não há o que votar aqui: aprovar o conceito existente ou pedir alternativas.</p>
+            </div>
+            <ul id="hubSingle" class="hub-list"></ul>
+          </section>
+
+          <section class="hub-section">
+            <div class="program-section-heading">
+              <div><span>Infraestrutura</span><h3>Climatização por situação de compra</h3></div>
+              <p>Base para o pedido de ar-condicionado e para o que ficou fora do orçamento atual.</p>
+            </div>
+            <div class="program-table-wrap">
+              <table>
+                <thead><tr><th>Situação</th><th>Ambientes</th><th>Equipamentos</th><th>Carga</th></tr></thead>
+                <tbody id="hubClimate"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="hub-section">
+            <div class="program-section-heading">
+              <div><span>Lacunas</span><h3>Sem especificação de climatização</h3></div>
+              <p>Ambientes de permanência que ainda não aparecem na planilha de ar-condicionado.</p>
+            </div>
+            <ul id="hubClimateGaps" class="hub-list"></ul>
+          </section>
+
+          <aside class="program-note">
+            <strong>Como o Hub registra decisões</strong>
+            <p>O voto identifica quem votou pelo nome informado e pode ser alterado a qualquer momento. Congelar uma decisão marca o conceito como referência para o 3D, plantas, elevações, marcenaria e detalhamento executivo.</p>
           </aside>
         </div>
       </div>

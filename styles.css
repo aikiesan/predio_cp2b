@@ -360,3 +360,86 @@ h1, h2, h3, p { margin-top: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
+
+
+/* ------------------------------------------------------------------ */
+/* CP2b Hub — painel, votação identificada e fichas técnicas            */
+/* ------------------------------------------------------------------ */
+
+.hub-button { min-height: 36px; padding: 0 14px; color: #33463a; background: #a9c0ad; border: 1px solid rgba(85,115,95,.2); border-radius: 11px; font-size: .78rem; font-weight: 820; cursor: pointer; transition: 150ms ease; }
+.hub-button:hover { background: #b9ccbc; transform: translateY(-1px); }
+
+.voter-bar { display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 12px; background: rgba(255,250,243,.8); border: 1px solid rgba(85,115,95,.16); border-radius: 11px; font-size: .74rem; }
+.voter-bar[hidden] { display: none; }
+.voter-bar label { color: #78827b; font-weight: 720; }
+.voter-bar input { width: 120px; min-height: 28px; padding: 0 8px; color: #3f4c43; background: #fffdf9; border: 1px solid rgba(85,115,95,.2); border-radius: 8px; font: inherit; }
+.voter-save { min-height: 28px; padding: 0 10px; color: #33463a; background: #d8e2d9; border: 0; border-radius: 8px; font-size: .72rem; font-weight: 800; cursor: pointer; }
+.voter-save:hover { background: #c7d6c9; }
+.voter-name { color: #55735f; }
+.voter-link { padding: 0; color: #9a8a76; background: none; border: 0; font-size: .72rem; text-decoration: underline; cursor: pointer; }
+
+/* estado da decisão */
+.status-pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: .66rem; font-weight: 820; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.status-pill[data-status="frozen"] { color: #2f4a38; background: #bcd6c0; }
+.status-pill[data-status="voting"] { color: #6b4a30; background: #e8cdb4; }
+.status-pill[data-status="open"] { color: #6d7871; background: #e2dbd0; }
+.status-pill[data-status="single"] { color: #7a6a58; background: #ece2d3; }
+.status-pill[data-order] { color: #4d5b52; background: #e2dbd0; }
+.status-pill[data-order="included"] { color: #2f4a38; background: #bcd6c0; }
+.status-pill[data-order="excluded"] { color: #7d4a44; background: #eac9c4; }
+.status-pill[data-order="deferred"] { color: #7a5b33; background: #edd9b8; }
+.status-pill[data-order="validate"] { color: #6b4a30; background: #e8cdb4; }
+
+.decision-box { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
+.decision-line { margin: 0; color: #78827b; font-size: .74rem; line-height: 1.45; }
+.decision-line strong { color: #55735f; }
+.decision-line.mine { color: #55735f; }
+
+/* o seletor .vote-button span vira círculo: o rótulo precisa escapar disso */
+.vote-button .vote-label { display: inline; width: auto; height: auto; color: inherit; background: none; border-radius: 0; }
+.vote-button.is-current { background: #cfdcd0; color: #4a5a50; cursor: default; }
+.vote-button.is-current:hover { transform: none; }
+
+.freeze-button { width: 100%; min-height: 38px; margin-top: 8px; color: #6b4a30; background: #ecdcc8; border: 1px solid rgba(154,100,75,.2); border-radius: 11px; font-size: .76rem; font-weight: 800; cursor: pointer; }
+.freeze-button:hover { background: #e3cfb6; }
+.freeze-button.is-frozen { color: #2f4a38; background: #cfe0d2; border-color: rgba(85,115,95,.24); }
+.freeze-button[hidden] { display: none; }
+
+.vote-hint { margin: 8px 0 0; color: #8a9289; font-size: .7rem; line-height: 1.45; }
+body[data-backend="db"] .gh-hint { display: none; }
+body[data-backend="github"] .db-hint { display: none; }
+
+/* ficha técnica do ambiente */
+.room-specs { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.room-spec { padding: 10px 12px; background: rgba(255,250,243,.7); border: 1px solid rgba(85,115,95,.14); border-left: 3px solid var(--teal); border-radius: 10px; }
+.room-spec > span { display: block; color: #8a9289; font-size: .64rem; font-weight: 820; letter-spacing: .08em; text-transform: uppercase; }
+.room-spec > strong { display: block; margin-top: 3px; color: #4d5b52; font-size: .82rem; }
+.room-spec > em { display: block; margin-top: 3px; color: #55735f; font-size: .72rem; font-style: normal; font-weight: 700; }
+.room-spec > p { margin: 5px 0 0; color: #8a9289; font-size: .7rem; line-height: 1.4; }
+.room-spec[data-order="excluded"] { border-left-color: #c9786e; }
+.room-spec[data-order="deferred"] { border-left-color: #d1a07f; }
+.room-spec[data-order="validate"] { border-left-color: #d1a07f; }
+.room-spec[data-order="missing"] { border-left-color: #c9786e; background: rgba(233,206,200,.3); }
+
+/* marcador de decisão na lista lateral */
+.room-item[data-status="frozen"] .room-name::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 7px; background: var(--teal-dark); border-radius: 50%; vertical-align: middle; }
+.room-item[data-status="voting"] .room-name::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 7px; background: var(--gold); border-radius: 50%; vertical-align: middle; }
+
+/* painel do Hub */
+.hub-dialog #hubTotals { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.hub-section { margin-top: 26px; }
+.hub-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.hub-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; background: rgba(255,250,243,.72); border: 1px solid rgba(85,115,95,.14); border-radius: 11px; font-size: .78rem; }
+.hub-list li span { color: #8a9289; font-size: .7rem; }
+.hub-list li.empty { color: #8a9289; justify-content: center; }
+.hub-room-link { padding: 0; color: #4d5b52; background: none; border: 0; font-size: .78rem; font-weight: 720; text-align: left; cursor: pointer; }
+.hub-room-link:hover { color: var(--teal-dark); text-decoration: underline; }
+.hub-dialog tbody tr[data-status="frozen"] { background: rgba(188,214,192,.16); }
+
+@media (max-width: 900px) {
+  .hub-dialog #hubTotals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hub-list { grid-template-columns: 1fr; }
+  /* o campo de nome precisa sobreviver no celular: quebra de linha, nunca display:none */
+  .header-actions { flex-wrap: wrap; row-gap: 8px; }
+  .voter-bar input { width: 100%; min-width: 96px; }
+}

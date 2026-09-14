@@ -192,11 +192,80 @@ const FURNITURE_TOTALS = [
   ["Kits de videoconferência", "2", "Câmera Logitech + microfone"],
 ];
 
+// ---------------------------------------------------------------------------
+// Dados técnicos — quadro de áreas e planilha de ar-condicionado
+// Fonte: Quadro_de_Áreas_Prédio_CP2b.xlsx (abas "Quadro de Áreas" e "Ar-Condicionado")
+// ---------------------------------------------------------------------------
+
+const ORDER_LABELS = {
+  included: "No pedido atual",
+  excluded: "Fora do pedido atual",
+  deferred: "Postergado no orçamento",
+  validate: "A validar",
+  planned: "Previsto",
+};
+
+const hvac = (btu, units, config, note, order) => ({ btu, units, config, note, order });
+
+const HVAC = {
+  "lab-analitica-01": hvac(72000, 2, "2 × 36.000 cassete 4 vias", "Manter 20–22 °C.", "validate"),
+  "lab-estufa-mufla": hvac(48000, 1, "1 × 48.000 cassete 4 vias", "Alta carga de equipamentos.", "deferred"),
+  "lab-fq-01": hvac(36000, 1, "1 × 36.000 cassete 4 vias", "Capela com uso intermitente.", "validate"),
+  "lab-reatores": hvac(48000, 1, "1 × 48.000 cassete 4 vias", "Validar vazão dos exaustores.", "validate"),
+  "lab-analitica-02": hvac(30000, 1, "1 × 30.000 cassete", "Não incluído no pedido atual.", "excluded"),
+  "lab-analitica-tecnico": hvac(30000, 1, "1 × 30.000 cassete", "Não incluído no pedido atual.", "excluded"),
+  "lab-fq-02": hvac(36000, 1, "1 × 36.000 cassete 4 vias", "Incluído no pedido.", "included"),
+  almoxarifado: hvac(12000, 1, "1 × 12.000 hi-wall", "Baixa ocupação; verificar exigências dos materiais.", "validate"),
+  auditorio: hvac(72000, 2, "2 × 36.000 cassete", "Validar ocupação máxima e renovação de ar.", "validate"),
+  "sala-adm-01": hvac(12000, 1, "1 × 12.000 hi-wall", "Adequado para 1–2 pessoas e computadores.", "planned"),
+  "sala-adm-02": hvac(12000, 1, "1 × 12.000 hi-wall", "Adequado para 1–2 pessoas e computadores.", "planned"),
+  "sala-pq-01": hvac(12000, 1, "1 × 12.000 hi-wall", "Adequado para 1–2 pessoas e computadores.", "planned"),
+  "sala-pq-02": hvac(12000, 1, "1 × 12.000 hi-wall", "Adequado para 1–2 pessoas e computadores.", "planned"),
+  "cowork-01": hvac(18000, 1, "1 × 18.000 hi-wall", "Maior ocupação.", "planned"),
+  descompressao: hvac(12000, 1, "1 × 12.000 hi-wall", "Uso comum de baixa permanência.", "planned"),
+  "reuniao-01": hvac(18000, 1, "1 × 18.000 hi-wall", "Considera aproximadamente 8 pessoas.", "planned"),
+  "reuniao-02": hvac(18000, 1, "1 × 18.000 hi-wall", "Considera aproximadamente 8 pessoas.", "planned"),
+  "escritorio-bruna": hvac(12000, 1, "1 × 12.000 hi-wall", "Adequado para 1–2 pessoas.", "planned"),
+  "escritorio-renata": hvac(12000, 1, "1 × 12.000 hi-wall", "Adequado para 1–2 pessoas.", "planned"),
+  "cowork-02": hvac(24000, 1, "1 × 24.000 hi-wall", "Alta densidade de pessoas e computadores.", "planned"),
+  "cowork-03": hvac(24000, 1, "1 × 24.000 hi-wall", "Alta densidade de pessoas e computadores.", "planned"),
+};
+
+const SECOND_FLOOR_DIMENSION = "3,39 × 4,35 m";
+const DIMENSIONS = {
+  almoxarifado: "7,15 × 4,74 m",
+  "sala-adm-01": SECOND_FLOOR_DIMENSION, "sala-adm-02": SECOND_FLOOR_DIMENSION,
+  "sala-pq-01": SECOND_FLOOR_DIMENSION, "sala-pq-02": SECOND_FLOOR_DIMENSION,
+  "cowork-01": SECOND_FLOOR_DIMENSION, "cowork-02": SECOND_FLOOR_DIMENSION, "cowork-03": SECOND_FLOOR_DIMENSION,
+  descompressao: SECOND_FLOOR_DIMENSION,
+  "reuniao-01": SECOND_FLOOR_DIMENSION, "reuniao-02": SECOND_FLOOR_DIMENSION,
+  "escritorio-bruna": SECOND_FLOOR_DIMENSION, "escritorio-renata": SECOND_FLOOR_DIMENSION,
+};
+
+// Área numérica a partir do rótulo "49,80 m²"; null para rótulos descritivos.
+function areaValue(label) {
+  const match = /^([\d.]+),(\d+)\s*m²$/.exec(String(label).trim());
+  return match ? Number(`${match[1].replace(/\./g, "")}.${match[2]}`) : null;
+}
+
+floors.forEach((floor) => floor.rooms.forEach((room) => {
+  room.floorName = floor.shortName;
+  room.hvac = HVAC[room.id] || null;
+  room.dimensions = DIMENSIONS[room.id] || null;
+  room.areaValue = areaValue(room.area);
+  room.decidable = room.concepts.length > 1;
+}));
+
 const state = {
   floorIndex: 0,
   room: null,
   conceptIndex: 0,
   votes: new Map(),
+  decisions: new Map(),
+  backend: "github",
+  voter: "",
+  voterSlug: "",
+  myPicks: {},
   planZoom: 1,
   imageZoom: 1,
   imageX: 0,
@@ -213,6 +282,7 @@ const floorPlan = $("#floorPlan");
 const hotspotLayer = $("#hotspotLayer");
 const galleryDialog = $("#galleryDialog");
 const programDialog = $("#programDialog");
+const hubDialog = $("#hubDialog");
 const viewerImage = $("#viewerImage");
 const imagePan = $("#imagePan");
 const photoPreview = $("#photoPreview");
@@ -246,7 +316,7 @@ function renderFloor() {
   floorPlan.alt = `Planta baixa — ${floor.shortName}: ${floor.title}`;
 
   roomList.innerHTML = floor.rooms.map((room) => `
-    <button type="button" class="room-item" data-room="${room.id}" data-preview-room="${room.id}">
+    <button type="button" class="room-item" data-room="${room.id}" data-preview-room="${room.id}" data-status="${roomStatus(room).key}">
       <span><span class="room-name">${room.name}</span><span class="room-area">${room.area}</span></span>
       <span class="room-options">${room.concepts.length} ${room.concepts.length === 1 ? "opção" : "opções"}</span>
     </button>
@@ -342,6 +412,7 @@ function renderGallery() {
     <div class="room-program-meta"><span>${room.program.type}</span><span>${room.program.capacity}</span></div>
     ${room.program.technicalContext ? `<p>${room.program.technicalContext}</p>` : ""}
     <ul>${room.program.furniture.map((item) => `<li>${item}</li>`).join("")}</ul>
+    ${renderRoomSpecs(room)}
   `;
   $("#conceptVotes").textContent = voteCount(room.id, selected.id);
   viewerImage.src = selected.image;
@@ -355,7 +426,190 @@ function renderGallery() {
   const multiple = room.concepts.length > 1;
   $("#previousConcept").hidden = !multiple;
   $("#nextConcept").hidden = !multiple;
+  renderDecisionBox(room, selected);
   applyImageTransform();
+}
+
+function needsHvac(room) {
+  return !room.id.startsWith("corredor") && room.id !== "entrada-principal";
+}
+
+function formatNumber(value) {
+  return Number(value).toLocaleString("pt-BR");
+}
+
+function formatArea(value) {
+  return Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderRoomSpecs(room) {
+  const dimension = room.dimensions
+    ? `<div class="room-spec"><span>Dimensões</span><strong>${room.dimensions}</strong></div>`
+    : "";
+  let climate;
+  if (room.hvac) {
+    climate = `<div class="room-spec" data-order="${room.hvac.order}">
+      <span>Climatização</span>
+      <strong>${room.hvac.config}</strong>
+      <em>${formatNumber(room.hvac.btu)} BTU/h · ${ORDER_LABELS[room.hvac.order]}</em>
+      <p>${room.hvac.note}</p>
+    </div>`;
+  } else if (needsHvac(room)) {
+    climate = `<div class="room-spec" data-order="missing">
+      <span>Climatização</span>
+      <strong>Sem especificação no quadro</strong>
+      <p>Ambiente ainda não dimensionado na planilha de ar-condicionado.</p>
+    </div>`;
+  } else {
+    climate = "";
+  }
+  if (!dimension && !climate) return "";
+  return `<div class="room-specs">${dimension}${climate}</div>`;
+}
+
+function renderDecisionBox(room, selected) {
+  const box = $("#decisionBox");
+  if (!box) return;
+  const status = roomStatus(room);
+  const decision = state.decisions.get(room.id);
+  const mine = state.myPicks[room.id];
+  const parts = [`<span class="status-pill" data-status="${status.key}">${status.label}</span>`];
+
+  if (decision) {
+    parts.push(`<p class="decision-line">Congelado em <strong>${escapeHtml(decision.conceptTitle || decision.conceptId)}</strong>${decision.by && decision.by !== "-" ? ` por ${escapeHtml(decision.by)}` : ""}.</p>`);
+  } else if (!room.decidable) {
+    parts.push(`<p class="decision-line">Só existe um conceito para este ambiente. Aprove-o ou peça alternativas antes de congelar.</p>`);
+  }
+
+  if (mine) {
+    const picked = room.concepts.find((item) => item.id === mine);
+    parts.push(`<p class="decision-line mine">Seu voto: <strong>${escapeHtml(picked ? picked.title : mine)}</strong>.</p>`);
+  }
+  box.innerHTML = parts.join("");
+
+  const voteButton = $("#voteButton");
+  voteButton.classList.toggle("is-current", mine === selected.id);
+  voteButton.querySelector(".vote-label").textContent = mine === selected.id
+    ? "Seu voto atual"
+    : mine ? "Mudar voto para este" : "Votar neste conceito";
+
+  const freeze = $("#freezeButton");
+  freeze.hidden = state.backend !== "db";
+  freeze.textContent = decision ? "Reabrir votação" : "Congelar como decisão";
+  freeze.classList.toggle("is-frozen", Boolean(decision));
+}
+
+const ROOM_NAME_COUNTS = floors.flatMap((floor) => floor.rooms)
+  .reduce((counts, room) => { counts[room.name] = (counts[room.name] || 0) + 1; return counts; }, {});
+
+function hubRoomLabel(room) {
+  return ROOM_NAME_COUNTS[room.name] > 1 ? `${room.name} · ${room.floorName}` : room.name;
+}
+
+function hubMetrics() {
+  const rooms = floors.flatMap((floor) => floor.rooms);
+  const decidable = rooms.filter((room) => room.decidable);
+  const single = rooms.filter((room) => !room.decidable);
+  const climate = rooms.filter((room) => room.hvac);
+  const climateGaps = rooms.filter((room) => !room.hvac && needsHvac(room));
+  const byOrder = {};
+  climate.forEach((room) => {
+    const entry = byOrder[room.hvac.order] || (byOrder[room.hvac.order] = { rooms: 0, units: 0, btu: 0 });
+    entry.rooms += 1;
+    entry.units += room.hvac.units;
+    entry.btu += room.hvac.btu;
+  });
+  return {
+    rooms,
+    decidable,
+    single,
+    climate,
+    climateGaps,
+    byOrder,
+    concepts: rooms.reduce((sum, room) => sum + room.concepts.length, 0),
+    totalBtu: climate.reduce((sum, room) => sum + room.hvac.btu, 0),
+    totalUnits: climate.reduce((sum, room) => sum + room.hvac.units, 0),
+    decided: rooms.filter((room) => state.decisions.has(room.id)).length,
+  };
+}
+
+function renderHub() {
+  const m = hubMetrics();
+  const pending = m.decidable.length - m.decidable.filter((room) => state.decisions.has(room.id)).length;
+
+  $("#hubTotals").innerHTML = [
+    [m.rooms.length, "ambientes mapeados"],
+    [m.concepts, "conceitos disponíveis"],
+    [`${m.decided}/${m.decidable.length}`, "decisões congeladas"],
+    [formatNumber(m.totalBtu), "BTU/h especificados"],
+  ].map(([value, label]) => `<article class="program-total"><strong>${value}</strong><span>${label}</span></article>`).join("");
+
+  $("#hubFloorAreas").innerHTML = floors.map((floor) => {
+    const measured = floor.rooms.filter((room) => room.areaValue);
+    const total = measured.reduce((sum, room) => sum + room.areaValue, 0);
+    return `<tr>
+      <th scope="row">${floor.shortName}</th>
+      <td>${floor.rooms.length}</td>
+      <td>${measured.length}</td>
+      <td>${formatArea(total)} m²</td>
+    </tr>`;
+  }).join("");
+
+  $("#hubDecisions").innerHTML = m.decidable.map((room) => {
+    const status = roomStatus(room);
+    const lead = leadingConcept(room);
+    const decision = state.decisions.get(room.id);
+    const highlight = decision
+      ? escapeHtml(decision.conceptTitle || decision.conceptId)
+      : lead ? `${escapeHtml(lead.concept.title)} (${lead.votes})` : "—";
+    return `<tr data-status="${status.key}">
+      <th scope="row"><button type="button" class="hub-room-link" data-jump="${room.id}">${hubRoomLabel(room)}</button></th>
+      <td>${room.concepts.length}</td>
+      <td>${roomVoteTotal(room.id)}</td>
+      <td>${highlight}</td>
+      <td><span class="status-pill" data-status="${status.key}">${status.label}</span></td>
+    </tr>`;
+  }).join("");
+
+  $("#hubSingle").innerHTML = m.single
+    .map((room) => `<li><button type="button" class="hub-room-link" data-jump="${room.id}">${hubRoomLabel(room)}</button><span>${room.area}</span></li>`)
+    .join("");
+
+  $("#hubClimate").innerHTML = Object.entries(m.byOrder)
+    .sort((a, b) => b[1].btu - a[1].btu)
+    .map(([order, entry]) => `<tr>
+      <th scope="row"><span class="status-pill" data-order="${order}">${ORDER_LABELS[order]}</span></th>
+      <td>${entry.rooms}</td>
+      <td>${entry.units}</td>
+      <td>${formatNumber(entry.btu)} BTU/h</td>
+    </tr>`).join("");
+
+  $("#hubClimateGaps").innerHTML = m.climateGaps.length
+    ? m.climateGaps.map((room) => `<li><button type="button" class="hub-room-link" data-jump="${room.id}">${hubRoomLabel(room)}</button><span>${room.area}</span></li>`).join("")
+    : `<li class="empty">Todos os ambientes têm especificação.</li>`;
+
+  $("#hubSummary").textContent = pending === 0
+    ? "Todas as escolhas com mais de uma opção já foram congeladas."
+    : `${pending} ${pending === 1 ? "ambiente aguarda decisão" : "ambientes aguardam decisão"} entre múltiplas opções.`;
+}
+
+function openHub() {
+  hidePhotoPreview();
+  renderHub();
+  if (!hubDialog.open) hubDialog.showModal();
+}
+
+function closeHub() { hubDialog.close(); }
+
+function jumpToRoom(roomId) {
+  for (let index = 0; index < floors.length; index += 1) {
+    const room = floors[index].rooms.find((item) => item.id === roomId);
+    if (!room) continue;
+    closeHub();
+    if (index !== state.floorIndex) { state.floorIndex = index; renderFloor(); }
+    openGallery(room, 0);
+    return;
+  }
 }
 
 function renderProgram() {
@@ -406,19 +660,202 @@ function selectConcept(index) {
   updateHash();
 }
 
+// ---------------------------------------------------------------------------
+// Votacao
+// Em um Artifact publicado os votos vao para o armazenamento da propria pagina
+// (sem login). Servido como pagina estatica, mantem o registro por issue do
+// GitHub, que era o comportamento anterior.
+// ---------------------------------------------------------------------------
+
+let dbRef = null;
+const subscriptions = [];
+
 function voteCount(roomId, conceptId) {
   return state.votes.get(`${roomId}:${conceptId}`) || 0;
 }
+
+function roomVoteTotal(roomId) {
+  let total = 0;
+  for (const [key, count] of state.votes) {
+    if (key.startsWith(`${roomId}:`)) total += count;
+  }
+  return total;
+}
+
+function leadingConcept(room) {
+  let best = null;
+  for (const item of room.concepts) {
+    const votes = voteCount(room.id, item.id);
+    if (votes > 0 && (!best || votes > best.votes)) best = { concept: item, votes };
+  }
+  return best;
+}
+
+function roomStatus(room) {
+  if (state.decisions.has(room.id)) return { key: "frozen", label: "Decidido" };
+  if (!room.decidable) return { key: "single", label: "Conceito unico" };
+  if (roomVoteTotal(room.id) > 0) return { key: "voting", label: "Em votacao" };
+  return { key: "open", label: "Aguardando votos" };
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (ch) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]
+  ));
+}
+
+function voterSlug(name) {
+  return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+}
+
+function setVoter(name) {
+  const clean = name.trim().replace(/\s+/g, " ").slice(0, 60);
+  const slug = voterSlug(clean);
+  if (!slug) { showToast("Informe um nome valido para votar."); return false; }
+  state.voter = clean;
+  state.voterSlug = slug;
+  state.myPicks = {};
+  localStorage.setItem("cp2b-voter", clean);
+  renderVoterBar();
+  if (state.room) renderGallery();
+  return true;
+}
+
+function renderVoterBar() {
+  const bar = $("#voterBar");
+  if (!bar) return;
+  if (state.backend !== "db") { bar.hidden = true; return; }
+  bar.hidden = false;
+  bar.innerHTML = state.voter
+    ? `<span class="voter-name">Votando como <strong>${escapeHtml(state.voter)}</strong></span>
+       <button type="button" id="voterChange" class="voter-link">trocar</button>`
+    : `<label for="voterInput">Seu nome</label>
+       <input id="voterInput" type="text" maxlength="60" placeholder="Ex.: Bruna" autocomplete="name" />
+       <button type="button" id="voterSave" class="voter-save">Entrar</button>`;
+}
+
+async function castVote() {
+  if (state.backend !== "db") { registerGithubVote(); return; }
+  const room = state.room;
+  const selected = room.concepts[state.conceptIndex];
+  if (!state.voter) {
+    showToast("Informe seu nome no topo para votar.");
+    const input = $("#voterInput");
+    if (input) input.focus();
+    return;
+  }
+  const button = $("#voteButton");
+  button.disabled = true;
+  try {
+    const picks = { ...state.myPicks, [room.id]: selected.id };
+    await dbRef.doc(`votes/${state.voterSlug}`).set({
+      voter: state.voter,
+      picks,
+      updatedAt: new Date().toISOString(),
+    });
+    state.myPicks = picks;
+    showToast(`Voto registrado em "${selected.title}".`);
+    renderGallery();
+  } catch (error) {
+    showToast(error && error.code === "quota_exceeded"
+      ? "Limite de armazenamento atingido. Avise o responsavel pelo Hub."
+      : "Nao foi possivel registrar o voto. Tente novamente.");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function freezeDecision() {
+  const room = state.room;
+  const selected = room.concepts[state.conceptIndex];
+  if (state.backend !== "db") {
+    showToast("Congelar a decisao so esta disponivel no Hub publicado.");
+    return;
+  }
+  const button = $("#freezeButton");
+  button.disabled = true;
+  try {
+    if (state.decisions.has(room.id)) {
+      await dbRef.doc(`decisions/${room.id}`).delete();
+      showToast(`${room.name} voltou para votacao.`);
+    } else {
+      await dbRef.doc(`decisions/${room.id}`).set({
+        conceptId: selected.id,
+        conceptTitle: selected.title,
+        roomName: room.name,
+        by: state.voter || "-",
+        at: new Date().toISOString(),
+      });
+      showToast(`${room.name} congelado em "${selected.title}".`);
+    }
+  } catch (error) {
+    showToast(error && error.code === "invalid_argument"
+      ? "Somente editores do Hub podem congelar decisoes."
+      : "Nao foi possivel atualizar a decisao.");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function subscribeStore() {
+  const status = $("#syncStatus");
+
+  subscriptions.push(dbRef.collection("votes").onSnapshot((snap) => {
+    const votes = new Map();
+    let voters = 0;
+    let mine = null;
+    for (const doc of snap.docs) {
+      const data = doc.data() || {};
+      const picks = data.picks && typeof data.picks === "object" ? data.picks : {};
+      const entries = Object.entries(picks).filter(([, value]) => typeof value === "string");
+      if (entries.length) voters += 1;
+      for (const [roomId, conceptId] of entries) {
+        const key = `${roomId}:${conceptId}`;
+        votes.set(key, (votes.get(key) || 0) + 1);
+      }
+      if (doc.id === state.voterSlug) mine = Object.fromEntries(entries);
+    }
+    state.votes = votes;
+    state.myPicks = mine || {};
+    status.textContent = voters === 0
+      ? "Nenhum voto ainda"
+      : `${voters} ${voters === 1 ? "pessoa votou" : "pessoas votaram"}`;
+    status.classList.add("success");
+    refreshVoteViews();
+  }, () => {
+    status.textContent = "Contagem de votos indisponivel";
+    status.classList.remove("success");
+  }));
+
+  subscriptions.push(dbRef.collection("decisions").onSnapshot((snap) => {
+    const decisions = new Map();
+    for (const doc of snap.docs) {
+      const data = doc.data() || {};
+      if (typeof data.conceptId === "string") decisions.set(doc.id, data);
+    }
+    state.decisions = decisions;
+    refreshVoteViews();
+  }, () => {}));
+}
+
+function refreshVoteViews() {
+  if (state.room) renderGallery();
+  if (hubDialog && hubDialog.open) renderHub();
+  renderFloor();
+}
+
+// --- registro alternativo por issue do GitHub (pagina estatica) -------------
 
 function createVoteUrl() {
   const floor = floors[state.floorIndex];
   const room = state.room;
   const selected = room.concepts[state.conceptIndex];
-  const title = `[VOTO] ${room.name} — ${selected.title}`;
+  const title = `[VOTO] ${room.name} - ${selected.title}`;
   const body = [
     `**Pavimento:** ${floor.shortName}`,
     `**Ambiente:** ${room.name}`,
-    `**Área:** ${room.area}`,
+    `**Area:** ${room.area}`,
     `**Conceito escolhido:** ${selected.title}`,
     "",
     "Este registro representa um voto a favor do conceito acima.",
@@ -428,21 +865,20 @@ function createVoteUrl() {
   return `https://github.com/${GITHUB_REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
 }
 
-function registerVote() {
-  const url = createVoteUrl();
-  window.open(url, "_blank", "noopener,noreferrer");
+function registerGithubVote() {
+  window.open(createVoteUrl(), "_blank", "noopener,noreferrer");
   const selected = state.room.concepts[state.conceptIndex];
   localStorage.setItem(`cp2b-pending-${state.room.id}`, selected.id);
   showToast("Voto preparado no GitHub. Confirme o envio para ele entrar na contagem.");
 }
 
-async function loadVotes() {
+async function loadGithubVotes() {
   const status = $("#syncStatus");
   try {
     const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues?state=all&per_page=100`, {
       headers: { Accept: "application/vnd.github+json" },
     });
-    if (!response.ok) throw new Error("GitHub indisponível");
+    if (!response.ok) throw new Error("GitHub indisponivel");
     const issues = await response.json();
     const seen = new Set();
     const votes = new Map();
@@ -450,7 +886,7 @@ async function loadVotes() {
       if (issue.pull_request || !issue.body) continue;
       const match = issue.body.match(/<!--\s*vote:([a-z0-9-]+):([a-z0-9-]+)\s*-->/i);
       if (!match) continue;
-      const voter = issue.user?.login || `issue-${issue.number}`;
+      const voter = (issue.user && issue.user.login) || `issue-${issue.number}`;
       const voterRoom = `${voter}:${match[1]}`;
       if (seen.has(voterRoom)) continue;
       seen.add(voterRoom);
@@ -460,10 +896,29 @@ async function loadVotes() {
     state.votes = votes;
     status.textContent = `${seen.size} ${seen.size === 1 ? "voto registrado" : "votos registrados"}`;
     status.classList.add("success");
-    if (state.room) renderGallery();
+    refreshVoteViews();
   } catch (error) {
-    status.textContent = "Contagem de votos indisponível";
+    status.textContent = "Contagem de votos indisponivel";
     status.classList.remove("success");
+  }
+}
+
+async function initBackend() {
+  try {
+    if (window.claude && typeof window.claude.use === "function") {
+      dbRef = await window.claude.use("db");
+    }
+  } catch (error) { dbRef = null; }
+  state.backend = dbRef ? "db" : "github";
+  document.body.dataset.backend = state.backend;
+  if (dbRef) {
+    const saved = localStorage.getItem("cp2b-voter");
+    if (saved) { state.voter = saved; state.voterSlug = voterSlug(saved); }
+    renderVoterBar();
+    subscribeStore();
+  } else {
+    renderVoterBar();
+    loadGithubVotes();
   }
 }
 
@@ -575,7 +1030,34 @@ $("#closeProgram").addEventListener("click", closeProgram);
 programDialog.addEventListener("click", (event) => { if (event.target === programDialog) closeProgram(); });
 $("#previousConcept").addEventListener("click", () => changeConcept(-1));
 $("#nextConcept").addEventListener("click", () => changeConcept(1));
-$("#voteButton").addEventListener("click", registerVote);
+$("#voteButton").addEventListener("click", castVote);
+$("#freezeButton").addEventListener("click", freezeDecision);
+$("#hubButton").addEventListener("click", openHub);
+$("#closeHub").addEventListener("click", closeHub);
+hubDialog.addEventListener("click", (event) => { if (event.target === hubDialog) closeHub(); });
+hubDialog.addEventListener("click", (event) => {
+  const jump = event.target.closest("[data-jump]");
+  if (jump) jumpToRoom(jump.dataset.jump);
+});
+$("#voterBar").addEventListener("click", (event) => {
+  if (event.target.closest("#voterSave")) {
+    const input = $("#voterInput");
+    if (input) setVoter(input.value);
+  }
+  if (event.target.closest("#voterChange")) {
+    state.voter = ""; state.voterSlug = ""; state.myPicks = {};
+    localStorage.removeItem("cp2b-voter");
+    renderVoterBar();
+    const input = $("#voterInput");
+    if (input) input.focus();
+  }
+});
+$("#voterBar").addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && event.target.id === "voterInput") {
+    event.preventDefault();
+    setVoter(event.target.value);
+  }
+});
 $("#planZoomOut").addEventListener("click", () => setPlanZoom(state.planZoom - 0.15));
 $("#planZoomIn").addEventListener("click", () => setPlanZoom(state.planZoom + 0.15));
 $("#planZoomReset").addEventListener("click", () => setPlanZoom(1));
@@ -626,4 +1108,4 @@ document.addEventListener("keydown", (event) => {
 
 window.addEventListener("hashchange", restoreHash);
 restoreHash();
-loadVotes();
+initBackend();
