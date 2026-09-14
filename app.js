@@ -1,0 +1,415 @@
+const GITHUB_REPO = "aikiesan/predio_cp2b";
+const asset = (name) => `assets/concepts/${name}`;
+
+const concept = (id, title, image, description = "Compare materiais, mobiliário, iluminação e organização espacial desta alternativa.") => ({
+  id, title, image: asset(image), description,
+});
+
+const fourOptions = (prefix, titles, description) => titles.map((title, index) =>
+  concept(`${prefix}-${index + 1}`, title, `${prefix}-${String(index + 1).padStart(2, "0")}.webp`, description)
+);
+
+const halls = fourOptions("hall-terreo", [
+  "Recepção essencial", "Recepção minimalista", "Galeria científica", "Recepção social",
+], "Conceito para o hall de recepção do térreo, com a caixa existente retirada e circulação central preservada.");
+
+const lobby = fourOptions("lobby-elevador", [
+  "Identidade institucional", "Wayfinding minimalista", "Portal em madeira e azul", "Galeria analítica",
+], "Tratamento do lobby preservando elevador, portas, rota tátil e circulação acessível.");
+
+const cafe = [
+  ...fourOptions("cafe", ["Café integrado", "Armários fechados", "Bar para dois lugares", "Ponto social verde"], "Copa de apoio com os pontos hidráulicos e acessos aos sanitários preservados."),
+  concept("cafe-5", "Estudo inicial", "cafe-original.webp", "Primeiro estudo do ponto de café e convivência."),
+];
+
+const entrance = [
+  ...fourOptions("entrada", ["Entrada institucional", "Portal minimalista", "Aletas verticais", "Grafismo no vidro"], "Intervenção na entrada sem alterar a geometria da fachada, o brise ou a rota acessível."),
+  concept("entrada-5", "Estudo inicial", "entrada-original.webp", "Primeiro estudo de identidade da entrada principal."),
+];
+
+const floors = [
+  {
+    id: "terreo",
+    number: "T",
+    shortName: "Térreo",
+    title: "Laboratórios e acesso principal",
+    plan: "assets/plans/terreo.png",
+    rooms: [
+      { id: "entrada-principal", name: "Entrada principal", area: "Acesso externo", x: 21.5, y: 68, concepts: entrance },
+      { id: "hall-terreo", name: "Hall de recepção", area: "60,60 m²", x: 18.6, y: 57.5, concepts: halls },
+      { id: "cafe", name: "Café e convivência", area: "Área de apoio", x: 20.5, y: 39.5, concepts: cafe },
+      { id: "lobby-elevador", name: "Lobby do elevador", area: "Circulação vertical", x: 10.5, y: 43.5, concepts: lobby },
+      { id: "lab-analitica-01", name: "Lab Analítica 01", area: "49,80 m²", x: 35.5, y: 45.2, concepts: [concept("lab-analitica-01-1", "Laboratório instrumental", "lab-analitica-01.webp", "Laboratório de química analítica com áreas para GC-MS, HPLC, TOC e análise de gases.")] },
+      { id: "lab-estufa-mufla", name: "Lab Estufa–Mufla", area: "47,50 m²", x: 61.8, y: 45.2, concepts: [concept("lab-estufa-mufla-1", "Laboratório térmico", "lab-estufa-mufla.webp", "Organização proposta para estufas, muflas, apoio técnico e circulação segura.")] },
+      { id: "lab-fq-01", name: "Lab Físico-Química 01", area: "36,50 m²", x: 42.7, y: 61.2, concepts: [concept("lab-fq-01-1", "Laboratório físico-químico", "lab-fq-01.webp")] },
+      { id: "lab-reatores", name: "Lab Reatores", area: "50,50 m²", x: 63.1, y: 58.5, concepts: [concept("lab-reatores-1", "Laboratório de reatores", "lab-reatores.webp", "Ambiente técnico para biodigestores, reatores e infraestrutura de gases.")] },
+      { id: "corredor-terreo", name: "Corredor", area: "29,68 m²", x: 45.2, y: 53.8, concepts: [concept("corredor-1", "Linha do biogás", "corredor.webp", "Identidade ambiental inspirada no fluxo do biogás e do biometano.")] },
+    ],
+  },
+  {
+    id: "primeiro-pavimento",
+    number: "1",
+    shortName: "1º pavimento",
+    title: "Laboratórios, almoxarifado e auditório",
+    plan: "assets/plans/primeiro-pavimento.png",
+    rooms: [
+      { id: "lab-analitica-02", name: "Lab Analítica 02", area: "28,00 m²", x: 34.4, y: 45.2, concepts: fourOptions("lab-analitica-02", ["Bancada central", "Bancadas perimetrais", "Mesa móvel", "Laboratório instrumental"], "Variações de bancada para instrumentação analítica mantendo a geometria fotografada.") },
+      { id: "lab-analitica-tecnico", name: "Lab Analítica + Técnico", area: "28,35 m²", x: 50.4, y: 45.2, concepts: fourOptions("lab-analitica-tecnico", ["Configuração integrada", "Bancada linear", "Bancada em península", "Análise e dados"], "Alternativas para integrar análise instrumental e posto técnico.") },
+      { id: "lab-fq-02", name: "Lab Físico-Química 02", area: "36,50 m²", x: 34.4, y: 62, concepts: [concept("lab-fq-02-1", "Laboratório físico-químico", "lab-fq-02.webp")] },
+      { id: "almoxarifado", name: "Almoxarifado", area: "33,50 m²", x: 50.3, y: 62, concepts: fourOptions("almoxarifado", ["Armazenamento técnico", "Armários fechados", "Armários e mesa móvel", "Bancada de apoio"], "Almoxarifado com a mesma volumetria do Laboratório 02, sem linguagem de galpão industrial.") },
+      { id: "auditorio", name: "Auditório", area: "67,50 m²", x: 67.3, y: 53, concepts: [
+        concept("auditorio-1", "Auditório institucional", "auditorio-01.webp"),
+        concept("auditorio-2", "Auditório sobre a foto", "auditorio-02.webp", "Alternativa ajustada à fotografia real do ambiente."),
+      ] },
+      { id: "corredor-primeiro", name: "Corredor", area: "29,68 m²", x: 44, y: 54.5, concepts: [concept("corredor-1", "Linha do biogás", "corredor.webp")] },
+    ],
+  },
+  {
+    id: "segundo-pavimento",
+    number: "2",
+    shortName: "2º pavimento",
+    title: "Escritórios, reuniões e colaboração",
+    plan: "assets/plans/segundo-pavimento.png",
+    rooms: [
+      { id: "sala-adm-01", name: "Sala Adm 01", area: "14,72 m²", x: 28.7, y: 44.8, concepts: [concept("coordenacao-1", "Coordenação", "coordenacao.webp")] },
+      { id: "sala-adm-02", name: "Sala Adm 02", area: "14,72 m²", x: 36.2, y: 44.8, concepts: [concept("coordenacao-1", "Coordenação", "coordenacao.webp")] },
+      { id: "sala-pq-01", name: "Sala PQ 01", area: "14,72 m²", x: 44.2, y: 44.8, concepts: [concept("escritorio-pq-1", "Escritório para pesquisadores", "escritorio-pq.webp")] },
+      { id: "sala-pq-02", name: "Sala PQ 02", area: "14,72 m²", x: 52, y: 44.8, concepts: [concept("escritorio-pq-1", "Escritório para pesquisadores", "escritorio-pq.webp")] },
+      { id: "cowork-01", name: "Cowork 01", area: "14,72 m²", x: 61, y: 44.8, concepts: [
+        concept("cowork-01-1", "Cowork compacto", "cowork-01a.webp"),
+        concept("cowork-01-2", "Estações rotacionadas", "cowork-01b.webp"),
+        concept("cowork-01-3", "Estações lineares", "cowork-01c.webp"),
+      ] },
+      { id: "descompressao", name: "Sala Descompressão", area: "14,72 m²", x: 70.4, y: 44.8, concepts: [
+        concept("descompressao-1", "Estar flexível", "descompressao-01.webp"),
+        concept("descompressao-2", "Pufes e descanso", "descompressao-02.webp"),
+        concept("descompressao-3", "Cortina e jogos", "descompressao-03.webp"),
+      ] },
+      { id: "reuniao-01", name: "Reunião 01", area: "14,72 m²", x: 28.7, y: 61.4, concepts: [concept("reuniao-01-1", "Sala de reunião", "reuniao-01.webp")] },
+      { id: "reuniao-02", name: "Reunião 02", area: "14,72 m²", x: 36.3, y: 61.4, concepts: [concept("reuniao-02-1", "Sala de reunião", "reuniao-02.webp")] },
+      { id: "escritorio-bruna", name: "Escritório Bruna", area: "14,72 m²", x: 44.3, y: 61.4, concepts: [concept("escritorio-bruna-1", "Escritório Bruna", "escritorio-bruna.webp")] },
+      { id: "escritorio-renata", name: "Escritório Renata", area: "14,72 m²", x: 52, y: 61.4, concepts: [concept("escritorio-renata-1", "Escritório Renata", "escritorio-renata.webp")] },
+      { id: "cowork-02", name: "Cowork 02", area: "14,72 m²", x: 61, y: 61.4, concepts: [concept("cowork-02-1", "Cowork 02", "cowork-02.webp")] },
+      { id: "cowork-03", name: "Cowork 03", area: "14,72 m²", x: 70.4, y: 61.4, concepts: [concept("cowork-03-1", "Cowork 03", "cowork-03.webp")] },
+      { id: "hall-superior", name: "Hall de recepção", area: "60,60 m²", x: 18.6, y: 57.2, concepts: [concept("hall-superior-1", "Hub de colaboração", "hall-superior.webp")] },
+      { id: "corredor-segundo", name: "Corredor", area: "29,68 m²", x: 44.4, y: 54.6, concepts: [concept("corredor-1", "Linha do biogás", "corredor.webp")] },
+    ],
+  },
+];
+
+const state = {
+  floorIndex: 0,
+  room: null,
+  conceptIndex: 0,
+  votes: new Map(),
+  planZoom: 1,
+  imageZoom: 1,
+  imageX: 0,
+  imageY: 0,
+  dragging: false,
+  pointerX: 0,
+  pointerY: 0,
+};
+
+const $ = (selector) => document.querySelector(selector);
+const floorNav = $("#floorNav");
+const roomList = $("#roomList");
+const floorPlan = $("#floorPlan");
+const hotspotLayer = $("#hotspotLayer");
+const galleryDialog = $("#galleryDialog");
+const viewerImage = $("#viewerImage");
+const imagePan = $("#imagePan");
+
+function cameraIcon() {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8.5h3l1.7-2.5h7.6l1.7 2.5h3v10h-17z"/><circle cx="12" cy="13.5" r="3.5"/></svg>`;
+}
+
+function renderFloorNav() {
+  floorNav.innerHTML = floors.map((floor, index) => `
+    <button type="button" class="floor-button ${index === state.floorIndex ? "active" : ""}" data-floor="${index}" aria-pressed="${index === state.floorIndex}">
+      <span class="floor-number">${floor.number}</span>
+      <strong>${floor.shortName}</strong>
+      <small>${floor.rooms.length}</small>
+    </button>
+  `).join("");
+}
+
+function renderFloor() {
+  const floor = floors[state.floorIndex];
+  renderFloorNav();
+  $("#floorKicker").textContent = floor.shortName;
+  $("#floorTitle").textContent = floor.title;
+  $("#roomCount").textContent = floor.rooms.length;
+  $("#footerCount").textContent = floor.rooms.length;
+  floorPlan.src = floor.plan;
+  floorPlan.alt = `Planta baixa — ${floor.shortName}: ${floor.title}`;
+
+  roomList.innerHTML = floor.rooms.map((room) => `
+    <button type="button" class="room-item" data-room="${room.id}">
+      <span><span class="room-name">${room.name}</span><span class="room-area">${room.area}</span></span>
+      <span class="room-options">${room.concepts.length} ${room.concepts.length === 1 ? "opção" : "opções"}</span>
+    </button>
+  `).join("");
+
+  hotspotLayer.innerHTML = floor.rooms.map((room) => `
+    <button type="button" class="hotspot" data-room="${room.id}" style="left:${room.x}%;top:${room.y}%" aria-label="Abrir conceitos de ${room.name}, ${room.area}">
+      ${cameraIcon()}
+      <span class="hotspot-label"><strong>${room.name}</strong><span>${room.area} · ${room.concepts.length} ${room.concepts.length === 1 ? "opção" : "opções"}</span></span>
+    </button>
+  `).join("");
+  applyPlanZoom();
+}
+
+function findRoom(roomId) {
+  return floors[state.floorIndex].rooms.find((room) => room.id === roomId);
+}
+
+function openGallery(room, conceptIndex = 0) {
+  state.room = room;
+  state.conceptIndex = Math.max(0, Math.min(conceptIndex, room.concepts.length - 1));
+  resetImageZoom();
+  renderGallery();
+  if (!galleryDialog.open) galleryDialog.showModal();
+  updateHash();
+}
+
+function closeGallery() {
+  galleryDialog.close();
+  state.room = null;
+  history.replaceState(null, "", location.pathname + location.search + `#${floors[state.floorIndex].id}`);
+}
+
+function renderGallery() {
+  const floor = floors[state.floorIndex];
+  const room = state.room;
+  const selected = room.concepts[state.conceptIndex];
+  $("#galleryFloor").textContent = floor.shortName;
+  $("#galleryRoom").textContent = room.name;
+  $("#galleryMeta").textContent = `${room.area} · ${room.concepts.length} ${room.concepts.length === 1 ? "conceito" : "conceitos"}`;
+  $("#conceptPosition").textContent = `Opção ${state.conceptIndex + 1} de ${room.concepts.length}`;
+  $("#conceptTitle").textContent = selected.title;
+  $("#conceptDescription").textContent = selected.description;
+  $("#conceptVotes").textContent = voteCount(room.id, selected.id);
+  viewerImage.src = selected.image;
+  viewerImage.alt = `${room.name} — ${selected.title}`;
+  $("#thumbnailList").innerHTML = room.concepts.map((item, index) => `
+    <button type="button" class="thumbnail ${index === state.conceptIndex ? "active" : ""}" data-concept="${index}" aria-label="Ver ${item.title}" aria-pressed="${index === state.conceptIndex}">
+      <img src="${item.image}" alt="" loading="lazy" />
+      <span>${voteCount(room.id, item.id)}</span>
+    </button>
+  `).join("");
+  const multiple = room.concepts.length > 1;
+  $("#previousConcept").hidden = !multiple;
+  $("#nextConcept").hidden = !multiple;
+  applyImageTransform();
+}
+
+function changeConcept(delta) {
+  if (!state.room) return;
+  const total = state.room.concepts.length;
+  state.conceptIndex = (state.conceptIndex + delta + total) % total;
+  resetImageZoom();
+  renderGallery();
+  updateHash();
+}
+
+function selectConcept(index) {
+  state.conceptIndex = index;
+  resetImageZoom();
+  renderGallery();
+  updateHash();
+}
+
+function voteCount(roomId, conceptId) {
+  return state.votes.get(`${roomId}:${conceptId}`) || 0;
+}
+
+function createVoteUrl() {
+  const floor = floors[state.floorIndex];
+  const room = state.room;
+  const selected = room.concepts[state.conceptIndex];
+  const title = `[VOTO] ${room.name} — ${selected.title}`;
+  const body = [
+    `**Pavimento:** ${floor.shortName}`,
+    `**Ambiente:** ${room.name}`,
+    `**Área:** ${room.area}`,
+    `**Conceito escolhido:** ${selected.title}`,
+    "",
+    "Este registro representa um voto a favor do conceito acima.",
+    "",
+    `<!-- vote:${room.id}:${selected.id} -->`,
+  ].join("\n");
+  return `https://github.com/${GITHUB_REPO}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+}
+
+function registerVote() {
+  const url = createVoteUrl();
+  window.open(url, "_blank", "noopener,noreferrer");
+  const selected = state.room.concepts[state.conceptIndex];
+  localStorage.setItem(`cp2b-pending-${state.room.id}`, selected.id);
+  showToast("Voto preparado no GitHub. Confirme o envio para ele entrar na contagem.");
+}
+
+async function loadVotes() {
+  const status = $("#syncStatus");
+  try {
+    const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues?state=all&per_page=100`, {
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (!response.ok) throw new Error("GitHub indisponível");
+    const issues = await response.json();
+    const seen = new Set();
+    const votes = new Map();
+    for (const issue of issues) {
+      if (issue.pull_request || !issue.body) continue;
+      const match = issue.body.match(/<!--\s*vote:([a-z0-9-]+):([a-z0-9-]+)\s*-->/i);
+      if (!match) continue;
+      const voter = issue.user?.login || `issue-${issue.number}`;
+      const voterRoom = `${voter}:${match[1]}`;
+      if (seen.has(voterRoom)) continue;
+      seen.add(voterRoom);
+      const key = `${match[1]}:${match[2]}`;
+      votes.set(key, (votes.get(key) || 0) + 1);
+    }
+    state.votes = votes;
+    status.textContent = `${seen.size} ${seen.size === 1 ? "voto registrado" : "votos registrados"}`;
+    status.classList.add("success");
+    if (state.room) renderGallery();
+  } catch (error) {
+    status.textContent = "Contagem de votos indisponível";
+    status.classList.remove("success");
+  }
+}
+
+function updateHash() {
+  const floor = floors[state.floorIndex];
+  if (!state.room) {
+    history.replaceState(null, "", `${location.pathname}${location.search}#${floor.id}`);
+    return;
+  }
+  history.replaceState(null, "", `${location.pathname}${location.search}#${floor.id}/${state.room.id}/${state.conceptIndex + 1}`);
+}
+
+function restoreHash() {
+  const [floorId, roomId, conceptNumber] = location.hash.slice(1).split("/");
+  const floorIndex = floors.findIndex((floor) => floor.id === floorId);
+  if (floorIndex >= 0) state.floorIndex = floorIndex;
+  renderFloor();
+  if (roomId) {
+    const room = findRoom(roomId);
+    if (room) openGallery(room, Number(conceptNumber || 1) - 1);
+  }
+}
+
+function applyPlanZoom() {
+  $("#planCanvas").style.zoom = state.planZoom;
+  $("#planZoomLabel").textContent = `${Math.round(state.planZoom * 100)}%`;
+}
+
+function setPlanZoom(next) {
+  state.planZoom = Math.max(0.7, Math.min(2, next));
+  applyPlanZoom();
+}
+
+function resetImageZoom() {
+  state.imageZoom = 1;
+  state.imageX = 0;
+  state.imageY = 0;
+  applyImageTransform();
+}
+
+function applyImageTransform() {
+  imagePan.style.transform = `translate(${state.imageX}px, ${state.imageY}px) scale(${state.imageZoom})`;
+  $("#imageZoomLabel").textContent = `${Math.round(state.imageZoom * 100)}%`;
+}
+
+function setImageZoom(next) {
+  state.imageZoom = Math.max(1, Math.min(4, next));
+  if (state.imageZoom === 1) { state.imageX = 0; state.imageY = 0; }
+  applyImageTransform();
+}
+
+let toastTimer;
+function showToast(message) {
+  const toast = $("#toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 4200);
+}
+
+floorNav.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-floor]");
+  if (!button) return;
+  state.floorIndex = Number(button.dataset.floor);
+  state.planZoom = 1;
+  renderFloor();
+  updateHash();
+});
+
+document.addEventListener("click", (event) => {
+  const roomButton = event.target.closest("[data-room]");
+  if (roomButton) {
+    const room = findRoom(roomButton.dataset.room);
+    if (room) openGallery(room);
+  }
+  const thumb = event.target.closest("[data-concept]");
+  if (thumb) selectConcept(Number(thumb.dataset.concept));
+});
+
+$("#closeGallery").addEventListener("click", closeGallery);
+galleryDialog.addEventListener("click", (event) => { if (event.target === galleryDialog) closeGallery(); });
+$("#previousConcept").addEventListener("click", () => changeConcept(-1));
+$("#nextConcept").addEventListener("click", () => changeConcept(1));
+$("#voteButton").addEventListener("click", registerVote);
+$("#planZoomOut").addEventListener("click", () => setPlanZoom(state.planZoom - 0.15));
+$("#planZoomIn").addEventListener("click", () => setPlanZoom(state.planZoom + 0.15));
+$("#planZoomReset").addEventListener("click", () => setPlanZoom(1));
+$("#imageZoomOut").addEventListener("click", () => setImageZoom(state.imageZoom - 0.25));
+$("#imageZoomIn").addEventListener("click", () => setImageZoom(state.imageZoom + 0.25));
+$("#imageZoomReset").addEventListener("click", resetImageZoom);
+
+$("#imageViewer").addEventListener("wheel", (event) => {
+  event.preventDefault();
+  setImageZoom(state.imageZoom + (event.deltaY < 0 ? 0.2 : -0.2));
+}, { passive: false });
+
+$("#imageViewer").addEventListener("pointerdown", (event) => {
+  if (state.imageZoom <= 1) return;
+  state.dragging = true;
+  state.pointerX = event.clientX;
+  state.pointerY = event.clientY;
+  event.currentTarget.classList.add("dragging");
+  event.currentTarget.setPointerCapture(event.pointerId);
+});
+
+$("#imageViewer").addEventListener("pointermove", (event) => {
+  if (!state.dragging) return;
+  state.imageX += event.clientX - state.pointerX;
+  state.imageY += event.clientY - state.pointerY;
+  state.pointerX = event.clientX;
+  state.pointerY = event.clientY;
+  applyImageTransform();
+});
+
+function endDrag(event) {
+  state.dragging = false;
+  $("#imageViewer").classList.remove("dragging");
+  if (event?.pointerId !== undefined && event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+}
+$("#imageViewer").addEventListener("pointerup", endDrag);
+$("#imageViewer").addEventListener("pointercancel", endDrag);
+
+document.addEventListener("keydown", (event) => {
+  if (!galleryDialog.open) return;
+  if (event.key === "ArrowLeft") changeConcept(-1);
+  if (event.key === "ArrowRight") changeConcept(1);
+  if (event.key === "+" || event.key === "=") setImageZoom(state.imageZoom + 0.25);
+  if (event.key === "-") setImageZoom(state.imageZoom - 0.25);
+});
+
+window.addEventListener("hashchange", restoreHash);
+restoreHash();
+loadVotes();

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071c22" />
+    <meta
+      name="description"
+      content="Plantas interativas do edifício CP2B para visualização e votação dos conceitos de ambientes."
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23071c22'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%233de0c5' stroke-width='5'/%3E%3Cpath d='M20 36h24M25 27h14' stroke='%23f3c969' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <title>CP2B — Conceitos dos ambientes</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegação por pavimento">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"><span></span><span></span></div>
+          <div>
+            <p class="eyebrow">Edifício NIPE</p>
+            <h1>Conceitos CP2B</h1>
+          </div>
+        </div>
+
+        <nav class="floor-nav" id="floorNav" aria-label="Selecionar andar"></nav>
+
+        <section class="room-panel" aria-labelledby="roomListTitle">
+          <div class="section-heading">
+            <h2 id="roomListTitle">Ambientes</h2>
+            <span id="roomCount" class="count-pill"></span>
+          </div>
+          <div id="roomList" class="room-list"></div>
+        </section>
+
+        <div class="sidebar-footer">
+          <span class="legend-dot"></span>
+          Clique nos pontos da planta para comparar e votar.
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="workspace-header">
+          <div>
+            <p class="eyebrow" id="floorKicker"></p>
+            <h2 id="floorTitle"></h2>
+          </div>
+          <div class="header-actions">
+            <span id="syncStatus" class="sync-status" role="status">Atualizando votos…</span>
+            <div class="zoom-controls" aria-label="Zoom da planta">
+              <button type="button" id="planZoomOut" aria-label="Diminuir planta">−</button>
+              <span id="planZoomLabel">100%</span>
+              <button type="button" id="planZoomIn" aria-label="Ampliar planta">+</button>
+              <button type="button" id="planZoomReset" class="reset-button">Ajustar</button>
+            </div>
+          </div>
+        </header>
+
+        <section class="plan-stage" id="planStage" aria-label="Planta interativa">
+          <div class="plan-canvas" id="planCanvas">
+            <img id="floorPlan" alt="" draggable="false" />
+            <div id="hotspotLayer" class="hotspot-layer"></div>
+          </div>
+        </section>
+
+        <footer class="workspace-footer">
+          <div><span class="pulse-dot"></span><strong id="footerCount"></strong> ambientes com conceitos neste andar</div>
+          <p>Áreas conforme o quadro do projeto. Sanitários não participam da votação.</p>
+        </footer>
+      </main>
+    </div>
+
+    <dialog id="galleryDialog" class="gallery-dialog">
+      <div class="gallery-shell">
+        <header class="gallery-header">
+          <div>
+            <p class="eyebrow" id="galleryFloor"></p>
+            <h2 id="galleryRoom"></h2>
+            <p id="galleryMeta" class="gallery-meta"></p>
+          </div>
+          <button type="button" id="closeGallery" class="icon-button" aria-label="Fechar galeria">×</button>
+        </header>
+
+        <div class="gallery-body">
+          <section class="image-viewer" id="imageViewer" aria-label="Imagem ampliada do conceito">
+            <div class="image-pan" id="imagePan">
+              <img id="viewerImage" alt="" draggable="false" />
+            </div>
+            <button type="button" id="previousConcept" class="gallery-arrow previous" aria-label="Conceito anterior">‹</button>
+            <button type="button" id="nextConcept" class="gallery-arrow next" aria-label="Próximo conceito">›</button>
+            <div class="viewer-tools" aria-label="Zoom da imagem">
+              <button type="button" id="imageZoomOut" aria-label="Diminuir imagem">−</button>
+              <span id="imageZoomLabel">100%</span>
+              <button type="button" id="imageZoomIn" aria-label="Ampliar imagem">+</button>
+              <button type="button" id="imageZoomReset">Ajustar</button>
+            </div>
+          </section>
+
+          <aside class="concept-panel">
+            <div class="concept-summary">
+              <div>
+                <span id="conceptPosition" class="concept-position"></span>
+                <h3 id="conceptTitle"></h3>
+              </div>
+              <div class="vote-total"><strong id="conceptVotes">0</strong><span>votos</span></div>
+            </div>
+            <p id="conceptDescription" class="concept-description"></p>
+
+            <div id="thumbnailList" class="thumbnail-list" aria-label="Opções do ambiente"></div>
+
+            <div class="vote-box">
+              <button type="button" id="voteButton" class="vote-button">
+                <span aria-hidden="true">✓</span>
+                Votar neste conceito
+              </button>
+              <p>O GitHub abrirá com o voto preenchido. Confirme em “Submit new issue” para registrar.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="app.js" defer></script>
+  </body>
+</html>
